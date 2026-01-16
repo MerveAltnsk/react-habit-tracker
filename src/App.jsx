@@ -25,21 +25,23 @@ function App() {
   const [error, setError] = useState(null)
 
   /* =======================
-     DATA FETCH
+     FETCH HABITS
   ======================= */
   useEffect(() => {
-    setLoading(true)
-    setError(null)
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await getHabits()
+        setHabits(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    getHabits()
-      .then(res => {
-        setHabits(res.data)
-        setLoading(false)
-      })
-      .catch(() => {
-        setError("Data could not be loaded.")
-        setLoading(false)
-      })
+    fetchData()
   }, [])
 
   /* =======================
@@ -65,42 +67,42 @@ function App() {
      STREAK (SKOR)
   ======================= */
   useEffect(() => {
-    if (habits.length > 0 && habits.every(h => h.completed)) {
-      setSkor(prev => prev + 1)
-    }
+    if (allCompleted) setSkor(prev => prev + 1)
   }, [allCompleted])
 
   /* =======================
      ACTIONS
   ======================= */
-  function addHabit() {
-    if (yeniInput.trim() === "") return
+  const handleAddHabit = async () => {
+    if (!yeniInput.trim()) return
 
-    const newHabit = {
-      text: yeniInput,
-      completed: false
-    }
-
-    createHabit(newHabit).then(res => {
-      setHabits([...habits, res.data])
+    try {
+      const created = await createHabit({ text: yeniInput, completed: false })
+      setHabits([...habits, created])
       setYeniInput("")
-    })
+    } catch (err) {
+      setError("Failed to add habit: " + err.message)
+    }
   }
 
-  function deleteHabit(id) {
-    deleteHabitById(id).then(() => {
+  const handleDeleteHabit = async (id) => {
+    try {
+      await deleteHabitById(id)
       setHabits(habits.filter(h => h.id !== id))
-    })
+    } catch (err) {
+      setError("Failed to delete habit: " + err.message)
+    }
   }
 
-  function toggleHabit(habit) {
-    updateHabit(habit.id, { completed: !habit.completed }).then(res => {
+  const handleToggleHabit = async (habit) => {
+    try {
+      const updated = await updateHabit(habit.id, { completed: !habit.completed })
       setHabits(
-        habits.map(h =>
-          h.id === res.data.id ? res.data : h
-        )
+        habits.map(h => (h.id === updated.id ? updated : h))
       )
-    })
+    } catch (err) {
+      setError("Failed to update habit: " + err.message)
+    }
   }
 
   /* =======================
@@ -126,76 +128,74 @@ function App() {
         <NavLink to="/dashboard">Dashboard</NavLink>
       </nav>
 
-      {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
-      {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
+      {loading && <p style={{ textAlign: "center" }}>⏳ Loading...</p>}
+      {error && <p style={{ color: "red", textAlign: "center" }}>❌ {error}</p>}
 
-    <div className="container-card">
+      <div className="container-card">
+        <Routes>
+          {/* ================= HOME ================= */}
+          <Route
+            path="/"
+            element={
+              <>
+                {allCompleted && <h3 style={{ color: "green" }}>🎉 Bugün tamamlandı!</h3>}
 
-    
-      <Routes>
-        {/* ================= HOME ================= */}
-        <Route
-          path="/"
-          element={
-            <>
-              {allCompleted && <h3 style={{ color: "green" }}>🎉 Bugün tamamlandı!</h3>}
+                <p>Total: {habits.length}</p>
+                <p>Completed: {completedCount}</p>
+                <p>Remaining: {remainingCount}</p>
 
-              <p>Total: {habits.length}</p>
-              <p>Completed: {completedCount}</p>
-              <p>Remaining: {remainingCount}</p>
+                <h3>Points: {points}</h3>
+                <h3>Score: {skor}</h3>
 
-              <h3>Points: {points}</h3>
-              <h3>Score: {skor}</h3>
+                {/* FILTER BUTTONS */}
+                <div className="filter-container">
+                  <button onClick={() => setFilter("all")}>All</button>
+                  <button onClick={() => setFilter("completed")}>Completed</button>
+                  <button onClick={() => setFilter("active")}>Others</button>
+                </div>
 
-              {/* FILTER BUTTONS */}
-              <div className="filter-container">
-                <button onClick={() => setFilter("all")}>All</button>
-                <button onClick={() => setFilter("completed")}>Completed</button>
-                <button onClick={() => setFilter("active")}>Others</button>
-              </div>
-
-              {/* INPUT */}
-              <div className="input-group">
-                <input
-                  type="text"
-                  value={yeniInput}
-                  onChange={e => setYeniInput(e.target.value)}
-                  placeholder="New Mission"
-                />
-                <button onClick={addHabit}>Add</button>
-              </div>
-
-              {/* LIST */}
-              <ul>
-                {filteredHabits.map(habit => (
-                  <HabitItem
-                    key={habit.id}
-                    habit={habit}
-                    toggleHabit={toggleHabit}
-                    deleteHabit={deleteHabit}
+                {/* INPUT */}
+                <div className="input-group">
+                  <input
+                    type="text"
+                    value={yeniInput}
+                    onChange={e => setYeniInput(e.target.value)}
+                    placeholder="New Mission"
                   />
-                ))}
-              </ul>
-            </>
-          }
-        />
+                  <button onClick={handleAddHabit}>Add</button>
+                </div>
 
-        {/* ================= DASHBOARD ================= */}
-        <Route
-          path="/dashboard"
-          element={
-            <div style={{ padding: 20, textAlign: "center" }}>
-              <h2>Statistics 📊</h2>
-              <StatsBar
-                total={habits.length}
-                completed={completedCount}
-                remaining={remainingCount}
-                skor={skor}
-              />
-            </div>
-          }
-        />
-      </Routes>
+                {/* LIST */}
+                <ul>
+                  {filteredHabits.map(habit => (
+                    <HabitItem
+                      key={habit.id}
+                      habit={habit}
+                      toggleHabit={() => handleToggleHabit(habit)}
+                      deleteHabit={() => handleDeleteHabit(habit.id)}
+                    />
+                  ))}
+                </ul>
+              </>
+            }
+          />
+
+          {/* ================= DASHBOARD ================= */}
+          <Route
+            path="/dashboard"
+            element={
+              <div style={{ padding: 20, textAlign: "center" }}>
+                <h2>Statistics 📊</h2>
+                <StatsBar
+                  total={habits.length}
+                  completed={completedCount}
+                  remaining={remainingCount}
+                  skor={skor}
+                />
+              </div>
+            }
+          />
+        </Routes>
       </div>
     </>
   )
