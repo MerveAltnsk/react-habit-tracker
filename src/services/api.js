@@ -1,23 +1,57 @@
-import axios from "axios"
+// services/api.js
+import axios from "axios";
 
-const api = axios.create({
-  baseURL: "http://localhost:3001",
-  headers: {
-    "Content-Type": "application/json"
+const BASE_URL = "http://localhost:3001/habits";
+
+/* =======================
+   GET - tüm habitler
+======================= */
+export const getHabits = async () => {
+  try {
+    const res = await axios.get(BASE_URL);
+    return res.data;
+  } catch (err) {
+    throw new Error(err.response?.data || err.message);
   }
-})
+};
 
-// Tüm görevleri al
-export const getHabits = () => api.get("/habits")
+/* =======================
+   POST - yeni habit
+======================= */
+export const createHabit = async (habit) => {
+  try {
+    const res = await axios.post(BASE_URL, habit);
+    return res.data;
+  } catch (err) {
+    throw new Error(err.response?.data || err.message);
+  }
+};
 
-// Yeni görev ekle
-export const createHabit = (habit) => api.post("/habits", habit)
+/* =======================
+   DELETE - habit sil
+======================= */
+export const deleteHabitById = async (id) => {
+  try {
+    await axios.delete(`${BASE_URL}/${id}`);
+  } catch (err) {
+    throw new Error(err.response?.data || err.message);
+  }
+};
 
-// Görev sil
-export const deleteHabitById = (id) => api.delete(`/habits/${id}`)
+/* =======================
+   PATCH - toggle / update
+======================= */
+export const updateHabit = async (id, updatedFields) => {
+  try {
+    const res = await axios.patch(`${BASE_URL}/${id}`, updatedFields);
+    return res.data;
+  } catch (err) {
+    throw new Error(err.response?.data || err.message);
+  }
+};
 
-// Görev güncelle (toggle)
-export const updateHabit = (id, updatedFields) =>
-  api.patch(`/habits/${id}`, updatedFields)
 
-export default api
+
+// AUTH
+export const registerUser = (user) => axios.post(`${API_URL}/auth/register`, user);
+export const loginUser = (credentials) => axios.post(`${API_URL}/auth/login`, credentials);

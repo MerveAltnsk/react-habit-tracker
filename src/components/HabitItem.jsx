@@ -1,10 +1,10 @@
-function HabitItem({ habit, handleToggleHabit, handleDeleteHabit }) {
+function HabitItem({ habit, updateHabit, deleteHabitById }) {
   return (
     <li className="habit-item">
       <input
         type="checkbox"
         checked={habit.completed}
-        onChange={() => handleToggleHabit(habit)}
+        onChange={() => updateHabit(habit)}
         style={{ cursor: 'pointer', width: '18px', height: '18px' }}
       />
 
@@ -21,7 +21,7 @@ function HabitItem({ habit, handleToggleHabit, handleDeleteHabit }) {
 
       <button
         className="delete-btn"
-        onClick={() => handleDeleteHabit(habit.id)}
+        onClick={() => deleteHabitById(habit.id)}
       >
         Sil
       </button>

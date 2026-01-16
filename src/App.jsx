@@ -5,13 +5,6 @@ import "./App.css"
 import HabitItem from "./components/HabitItem"
 import StatsBar from "./components/StatsBar"
 
-import {
-  getHabits,
-  createHabit,
-  deleteHabitById,
-  updateHabit
-} from "./services/api"
-
 function App() {
   const [yeniInput, setYeniInput] = useState("")
   const [habits, setHabits] = useState([])
@@ -28,11 +21,13 @@ function App() {
      FETCH HABITS
   ======================= */
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchHabits = async () => {
       setLoading(true)
       setError(null)
       try {
-        const data = await getHabits()
+        const res = await fetch("http://localhost:3001/habits")
+        if (!res.ok) throw new Error("Data could not be loaded.")
+        const data = await res.json()
         setHabits(data)
       } catch (err) {
         setError(err.message)
@@ -41,7 +36,7 @@ function App() {
       }
     }
 
-    fetchData()
+    fetchHabits()
   }, [])
 
   /* =======================
@@ -73,36 +68,43 @@ function App() {
   /* =======================
      ACTIONS
   ======================= */
-  const handleAddHabit = async () => {
-    if (!yeniInput.trim()) return
+  const addHabit = () => {
+    if (yeniInput.trim() === "") return
 
-    try {
-      const created = await createHabit({ text: yeniInput, completed: false })
-      setHabits([...habits, created])
-      setYeniInput("")
-    } catch (err) {
-      setError("Failed to add habit: " + err.message)
-    }
+    const newHabit = { text: yeniInput, completed: false }
+
+    fetch("http://localhost:3001/habits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newHabit),
+    })
+      .then(res => res.json())
+      .then(createdHabit => {
+        setHabits([...habits, createdHabit])
+        setYeniInput("")
+      })
   }
 
-  const handleDeleteHabit = async (id) => {
-    try {
-      await deleteHabitById(id)
-      setHabits(habits.filter(h => h.id !== id))
-    } catch (err) {
-      setError("Failed to delete habit: " + err.message)
-    }
+  const toggleHabit = habit => {
+    fetch(`http://localhost:3001/habits/${habit.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ completed: !habit.completed }),
+    })
+      .then(res => res.json())
+      .then(updatedHabit => {
+        setHabits(
+          habits.map(h => (h.id === updatedHabit.id ? updatedHabit : h))
+        )
+      })
   }
 
-  const handleToggleHabit = async (habit) => {
-    try {
-      const updated = await updateHabit(habit.id, { completed: !habit.completed })
-      setHabits(
-        habits.map(h => (h.id === updated.id ? updated : h))
-      )
-    } catch (err) {
-      setError("Failed to update habit: " + err.message)
-    }
+  const deleteHabit = id => {
+    fetch(`http://localhost:3001/habits/${id}`, { method: "DELETE" }).then(
+      () => {
+        setHabits(habits.filter(h => h.id !== id))
+      }
+    )
   }
 
   /* =======================
@@ -133,28 +135,23 @@ function App() {
 
       <div className="container-card">
         <Routes>
-          {/* ================= HOME ================= */}
+          {/* HOME */}
           <Route
             path="/"
             element={
               <>
                 {allCompleted && <h3 style={{ color: "green" }}>🎉 Bugün tamamlandı!</h3>}
-
                 <p>Total: {habits.length}</p>
                 <p>Completed: {completedCount}</p>
                 <p>Remaining: {remainingCount}</p>
+                <h3>Points: {points} | Score: {skor}</h3>
 
-                <h3>Points: {points}</h3>
-                <h3>Score: {skor}</h3>
-
-                {/* FILTER BUTTONS */}
                 <div className="filter-container">
                   <button onClick={() => setFilter("all")}>All</button>
                   <button onClick={() => setFilter("completed")}>Completed</button>
                   <button onClick={() => setFilter("active")}>Others</button>
                 </div>
 
-                {/* INPUT */}
                 <div className="input-group">
                   <input
                     type="text"
@@ -162,17 +159,16 @@ function App() {
                     onChange={e => setYeniInput(e.target.value)}
                     placeholder="New Mission"
                   />
-                  <button onClick={handleAddHabit}>Add</button>
+                  <button onClick={addHabit}>Add</button>
                 </div>
 
-                {/* LIST */}
                 <ul>
                   {filteredHabits.map(habit => (
                     <HabitItem
                       key={habit.id}
                       habit={habit}
-                      toggleHabit={() => handleToggleHabit(habit)}
-                      deleteHabit={() => handleDeleteHabit(habit.id)}
+                      toggleHabit={() => toggleHabit(habit)}
+                      deleteHabit={() => deleteHabit(habit.id)}
                     />
                   ))}
                 </ul>
@@ -180,7 +176,7 @@ function App() {
             }
           />
 
-          {/* ================= DASHBOARD ================= */}
+          {/* DASHBOARD */}
           <Route
             path="/dashboard"
             element={
