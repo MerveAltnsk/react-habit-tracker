@@ -1,16 +1,95 @@
-# React + Vite
+# React Habit Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple yet powerful **Habit Tracker** application built with **React** and a lightweight **Node.js / Express** backend.  
+This project helps users track daily habits, monitor progress, and stay motivated with points and statistics.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## React Compiler
+### Frontend (React)
+- Add, delete, and toggle habits
+- Filter habits (All / Completed / Active)
+- Points system based on completed habits
+- Streak / score logic
+- Statistics dashboard
+- Routing with React Router
+- Protected routes (basic auth logic)
+- Loading & error states
+- Clean and simple UI
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Backend (Node.js + Express)
+- REST API for habits
+- CRUD operations:
+  - `GET /habits`
+  - `POST /habits`
+  - `PATCH /habits/:id`
+  - `DELETE /habits/:id`
+- Basic authentication endpoints:
+  - `POST /auth/register`
+  - `POST /auth/login`
+- In-memory data (no database yet)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠 Tech Stack
+
+**Frontend**
+- React
+- React Router DOM
+- JavaScript (ES6+)
+- CSS
+
+**Backend**
+- Node.js
+- Express
+- CORS
+
+---
+
+
+---
+
+## ⚙️ Installation & Setup
+
+### Clone the repository
+
+```bash
+git clone https://github.com/MerveAltnsk/react-habit-tracker.git
+cd react-habit-tracker
+```
+
+### Install frontend dependencies
+
+```bash
+npm install
+```
+
+### Install backend dependencies
+```bash
+cd server
+npm install
+```
+
+
+## API Endpoints
+Habits
+GET /habits → Get all habits
+POST /habits → Create new habit
+PATCH /habits/:id → Update habit
+DELETE /habits/:id → Delete habit
+Auth
+POST /auth/register
+POST /auth/login
+
+## 🎯 Learning Goals
+This project was built to practice:
+React Hooks & lifecycle (useState, useEffect)
+Component-based architecture
+API integration
+Basic backend development
+Authentication logic
+Git & GitHub workflow
+
+## 👩‍💻 Author
+Merve Altınışık
